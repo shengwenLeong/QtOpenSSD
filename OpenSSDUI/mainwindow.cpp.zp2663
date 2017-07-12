@@ -1,0 +1,71 @@
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include <QPushButton>
+
+#include <stdio.h>
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include "OpenSSD.h"
+#include "OpenSSD_API.h"
+
+int flag = 0;
+
+using namespace std;
+extern "C"
+{
+    #include "nvme_low_lib.h"
+}
+
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(on_pushButton_clicked()));
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    if(flag = 0)
+    {
+        int aa =3;
+        char dev[] = "/dev/nvme0n60124672p1";
+        //char weight_file[20];
+        //char image_file[20];
+        //char weight_file[] = "/home/nvme/input.bin";
+        //char image_file[] = "/home/nvme/image_data/07.bin";
+        char input;
+        int image_flag=1;
+        //image_flag = Run_OpenSSD(dev,weight_file,image_file,image_flag);
+        QString weightfile = ui->textEdit->toPlainText();
+        QString imagefile = ui->textEdit_2->toPlainText();
+        char *weight_file = weightfile.toLocal8Bit().data();
+        char *image_file = imagefile.toLocal8Bit().data();
+        if(move_weight_data(dev,weight_file))
+        {
+             ui->textBrowser->setText("weight map successfully");
+        }
+        else
+        {
+             ui->textBrowser->setText("weight map failed");
+        }
+        std::vector<sortclass> result;
+        result = run_image_result(dev, image_file);
+        cout<<"results:";
+        for(int i=0;i<5;i++) printf("(%3d,%02x) ", result[i].index,result[i].data);
+        cout<<endl;
+        QString temp;
+        temp.sprintf("top1 =%d , top2 = %d , top3 = %d , top4 = %d, top5 = %d",result[0].index,result[1].index,result[2].index,result[3].index,result[4].index);
+        ui->textBrowser_2->append(temp);
+        flag = 1;
+    }
+
+}
+
+
